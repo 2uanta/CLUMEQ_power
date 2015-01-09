@@ -1,0 +1,48 @@
+---
+title: "Power Consumption for 3-phase"
+author: "Quan Nguyen"
+date: "Thursday, October 23, 2014"
+output: html_document
+---
+
+###MGE UPS
+
+```{r}
+i1 = 107
+i2 = 103
+i3 = 99
+
+# Voltage Line-Line (and not Line-Neutral)
+v12 = 479
+v23 = 480
+v31 = 479
+
+v_avg = (v12+v23+v31)/3
+v_avg
+i_avg = (i1+i2+i3)/3
+i_avg
+pf = 0.95
+
+W = v_avg * i_avg * pf * sqrt(3)
+W
+```
+
+
+###lm-4r10-pdu-1
+
+```{r}
+i1 = 9.8
+i2 = 9.8
+i3 = 10
+
+# Voltage line to neutral
+v1 = 239.2
+v2 = 239.0
+v3 = 238.2
+
+pf = 0.98
+
+W = (v1 * i1 + v2 * i2 + v3 * i3) * pf
+W
+```
+
