@@ -12,7 +12,7 @@ library(zoo)
 library(lattice)
 library(ggplot2)
 # load the dataset
-data <- read.csv("C:/Users/Quan Nguyen/OneDrive/Workbench/R/Projects/CLUMEQ power/total-by-category", 
+data <- read.csv("C:/Users/Quan Nguyen/OneDrive/Workbench/R//CLUMEQ_power/total-by-category", 
                  strip.white=TRUE,na.strings=c("", "NA"),header=FALSE)
 names(data)[1]="datetime"
 names(data)[2]="category"
@@ -60,7 +60,7 @@ barplot(by(watt,category,mean),
 
 ```{r}
 # load the dataset
-data <- read.csv("C:/Users/Quan Nguyen/OneDrive/Workbench/R/Projects/CLUMEQ power/total-by-row", 
+data <- read.csv("C:/Users/Quan Nguyen/OneDrive/Workbench/R//CLUMEQ_power/total-by-row", 
                  strip.white=TRUE,na.strings=c("", "NA"),header=FALSE)
 names(data)[1]="datetime"
 names(data)[2]="row"
@@ -110,7 +110,7 @@ barplot(by(watt,row,mean),
 
 ```{r}
 # load the dataset
-data <- read.csv("C:/Users/Quan Nguyen/OneDrive/Workbench/R/Projects/CLUMEQ power/total-by-rack", 
+data <- read.csv("C:/Users/Quan Nguyen/OneDrive/Workbench/R/CLUMEQ_power/total-by-rack", 
                  strip.white=TRUE,na.strings=c("", "NA"),header=FALSE)
 names(data)[1]="datetime"
 names(data)[2]="rack"

@@ -6,7 +6,7 @@ output: html_document
 ---
 Load the dataset
 ```{r}
-data = read.csv("C:/Users/Quan Nguyen/OneDrive/Workbench/R/Projects/CLUMEQ power/summary-domain-v2-2014_11_23_20")
+data = read.csv("C:/Users/Quan Nguyen/OneDrive/Workbench/R/CLUMEQ_power/summary-domain-v2-2014_11_23_20")
 
 names(data)
 attach(data)
