@@ -11,7 +11,7 @@ library(lattice)
 library(ggplot2)
 library(scales)
 
-data <- read.csv("C:/Users/Quan Nguyen/OneDrive/Workbench/R/CLUMEQ_power/total", header=FALSE)
+data <- read.csv("total", header=FALSE)
 
 names(data)[1]="datetime"
 names(data)[2]="watt"

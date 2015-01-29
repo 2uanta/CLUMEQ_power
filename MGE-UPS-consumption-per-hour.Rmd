@@ -11,7 +11,7 @@ library(ggplot2)
 # load data
 # each observation is one hour
 
-data <- read.csv("C:/Users/Quan Nguyen/OneDrive/Workbench/R/CLUMEQ_power/mge-ups-total", header=FALSE)
+data <- read.csv("mge-ups-total", header=FALSE)
 names(data)[1]="datetime"
 names(data)[2]="watt"
 dim(data)
