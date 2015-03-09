@@ -1,5 +1,5 @@
 ---
-title: "IBM servers by group power consumption since beginning"
+title: "IBM servers by group domain power consumption since beginning"
 author: "Quan Nguyen"
 date: "Monday, October 27, 2014"
 output: html_document
