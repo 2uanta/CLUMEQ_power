@@ -7,7 +7,7 @@ output: html_document
 ```{r}
 library(zoo)
 # load the dataset
-data <- read.csv("ibm-pdu-t1-total", 
+data <- read.csv("data/ibm-pdu-t1-total", 
                  strip.white=TRUE,na.strings=c("", "NA"),header=FALSE)
 names(data)[1]="datetime"
 names(data)[2]="pdu"

@@ -14,7 +14,7 @@ library(lattice)
 library(ggplot2)
 library(scales)
 
-data <- read.csv("total-domain", header=FALSE)
+data <- read.csv("data/total-domain", header=FALSE)
 
 names(data)[1]="datetime"
 names(data)[2]="watt"
