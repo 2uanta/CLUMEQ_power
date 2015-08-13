@@ -1,0 +1,137 @@
+---
+title: "ETS Mechanical summary data.Rmd"
+author: "Quan Nguyen"
+date: "Thursday, May 28, 2015"
+output: html_document
+---
+
+```{r}
+library(xlsx)
+library(zoo)
+library(TTR)
+library(ggplot2)
+#data = read.xlsx(file="ETS-data/2014/CLUMEQ_MEC - 2014-07.xlsx", sheetName = "data", startRow = 2, colIndex = c(11,12))
+
+data = read.xlsx(file="ETS-data/2015/CLUMEQ_MEC - 2015-07.xlsx", sheetName = "data", startRow = 2, colIndex = c(11,12))
+```
+
+``` {r}
+names(data) = c("datetime", "kwh")
+data$datetime = as.POSIXlt(data$datetime,format="%Y/%m/%d %H:%M")
+
+data$year = as.Date(cut(as.Date(data$datetime), breaks="year"))
+data$quarter = as.Date(cut(as.Date(data$datetime), breaks="quarter"))
+data$month = as.Date(cut(as.Date(data$datetime), breaks="month"))
+data$week = as.Date(cut(as.Date(data$datetime), breaks="week"))
+data$day = as.Date(cut(as.Date(data$datetime), breaks="day"))
+data$hour = as.POSIXlt(cut(as.POSIXlt(data$datetime,format="%Y-%m-%d %H:%M"), breaks="hour"), format="%Y-%m-%d %H:%M:%S")
+data = data[data$day > "2013-01-01",]
+# Time Series Analysis
+dt = as.POSIXlt(data$datetime)
+data.z = zoo(x=data$kwh,order.by=dt)
+class(data.z)
+head(index(data.z))
+head(coredata(data.z))
+sub_text = range(index(data.z))
+
+attach(data)
+
+# Summary by month/week/...
+by(kwh, week, summary)
+by(kwh, week, sum)
+by(kwh, month, summary)
+by(kwh, month, sum)
+
+options(scipen=6)
+barplot(tapply(kwh, week, sum),
+    main="Total CLUMEQ/ETS Mechanical kwh"    ,
+    ylab="kW",
+)
+```
+
+``` {r eval=FALSE,echo=FALSE}
+sub_text = range(as.POSIXlt(datetime))
+plot(as.POSIXlt(datetime), jitter(kwh),
+     type='l',
+     xlab="datetime",
+     ylab="Watt",
+     #xaxt='n',
+     main="CLUMEQ/ETS Mechanical power consumption", 
+     sub=paste(sub_text,collapse="  to  "))
+
+
+hist(kwh,breaks=20,
+     main="Histogram of CLUMEQ/ETS Mechanical power consumption", 
+     sub=paste(sub_text,collapse="  to  "))
+# summary statistics
+boxplot(kwh, horizontal=T,
+        xlab="Watt",
+        main="Box plot of CLUMEQ/ETS Mechanical power consumption", 
+        sub=paste(sub_text,collapse="  to  "))
+```
+
+``` {r fig.width=12}
+# Time Series Analysis
+dt = as.POSIXlt(datetime)
+data.z = zoo(x=kwh,order.by=dt)
+class(data.z)
+head(index(data.z))
+head(coredata(data.z))
+sub_text = range(index(data.z))
+plot(data.z,
+     xlab="Date Range",
+     ylab="kWh",
+     #xaxt='n',
+     main="CLUMEQ/ETS Mechanical power consumption", 
+     sub=paste(sub_text,collapse="  to  ")
+     )
+data.z.SMA = SMA(data.z,n=10)
+lines(data.z.SMA,col="red")
+
+hist(coredata(data.z),breaks=20,
+     xlab="Date Range",
+     main="Histogram of MGE UPS power consumption", 
+     sub=paste(sub_text,collapse="  to  "))
+
+# summary statistics
+boxplot(coredata(data.z), horizontal=T,
+        xlab="Watt",
+        main="Box plot of MGE UPS power consumption", 
+        sub=paste(sub_text,collapse="  to  "))
+
+summary(kwh)
+sd(kwh)
+quantile(kwh,0.95)
+```
+
+###Study by day
+
+```{r fig.width=12, fig.height=12, results='hide'}
+# Boxplot by date
+par(mfrow=c(1,1))
+boxplot(kwh ~ as.Date(datetime))
+
+by(kwh,as.Date(datetime),summary)
+
+# will not print the date 
+#par(mfrow=c(1,3))
+#tapply(watt,as.Date(datetime),function(x)
+#  plot(x,
+#       type='l',
+#       xlab="Hour",
+#       ylab="Watts",
+#       #xaxt='n'
+#       main="IBM servers power consumption by day"
+#       )
+#)
+
+qplot(datetime,kwh,data=data[day != "2015-07-01",],geom="line", col="red") + facet_wrap(~day, scales='free_x', ncol=7)
+```
+
+###Decompose time series
+
+``` {r fig.height=12,fig.width=12}
+#plot(decompose(ts(coredata(data.z), frequency=24, as.Date("2014-10-23 12:30"))),xlab="Day")
+plot(decompose(ts(coredata(data.z), frequency=24, start=c(23,12))),xlab="Day")
+title(sub=paste(sub_text,collapse="  to  "))
+```
