@@ -1,0 +1,115 @@
+---
+title: "Merge ETS data.Rmd"
+author: "Quan Nguyen"
+date: "Thursday, May 28, 2015"
+output: html_document
+---
+
+### readRDS monthly CSV file from ETS and save as data frame
+
+```{r fig.width=12, fig.height=12}
+library(zoo)
+library(TTR)
+
+all_2014_01 = readRDS("ETS-rda/all_2014_01.rda")
+all_2014_02 = readRDS("ETS-rda/all_2014_02.rda")
+all_2014_03 = readRDS("ETS-rda/all_2014_03.rda")
+all_2014_04 = readRDS("ETS-rda/all_2014_04.rda")
+all_2014_05 = readRDS("ETS-rda/all_2014_05.rda")
+all_2014_06 = readRDS("ETS-rda/all_2014_06.rda")
+all_2014_07 = readRDS("ETS-rda/all_2014_07.rda")
+all_2014_08 = readRDS("ETS-rda/all_2014_08.rda")
+all_2014_09 = readRDS("ETS-rda/all_2014_09.rda")
+all_2014_10 = readRDS("ETS-rda/all_2014_10.rda")
+all_2014_11 = readRDS("ETS-rda/all_2014_11.rda")
+all_2014_12 = readRDS("ETS-rda/all_2014_12.rda")
+
+all_2015_01 = readRDS("ETS-rda/all_2015_01.rda")
+all_2015_02 = readRDS("ETS-rda/all_2015_02.rda")
+all_2015_03 = readRDS("ETS-rda/all_2015_03.rda")
+all_2015_04 = readRDS("ETS-rda/all_2015_04.rda")
+all_2015_05 = readRDS("ETS-rda/all_2015_05.rda")
+all_2015_06 = readRDS("ETS-rda/all_2015_06.rda")
+all_2015_07 = readRDS("ETS-rda/all_2015_07.rda")
+
+all = rbind(all_2014_01, all_2014_02, all_2014_03, all_2014_04,
+            all_2014_05, all_2014_06, all_2014_07, all_2014_08,
+            all_2014_09, all_2014_10, all_2014_11, all_2014_12,
+            all_2015_01, all_2015_02, all_2015_03, all_2015_04,
+            all_2015_05, all_2015_06, all_2015_07)
+all = all[order(all$datetime),] 
+
+mec_2014_01 = readRDS("ETS-rda/mec_2014_01.rda")
+mec_2014_02 = readRDS("ETS-rda/mec_2014_02.rda")
+mec_2014_03 = readRDS("ETS-rda/mec_2014_03.rda")
+mec_2014_04 = readRDS("ETS-rda/mec_2014_04.rda")
+mec_2014_05 = readRDS("ETS-rda/mec_2014_05.rda")
+mec_2014_06 = readRDS("ETS-rda/mec_2014_06.rda")
+mec_2014_07 = readRDS("ETS-rda/mec_2014_07.rda")
+mec_2014_08 = readRDS("ETS-rda/mec_2014_08.rda")
+mec_2014_09 = readRDS("ETS-rda/mec_2014_09.rda")
+mec_2014_10 = readRDS("ETS-rda/mec_2014_10.rda")
+mec_2014_11 = readRDS("ETS-rda/mec_2014_11.rda")
+mec_2014_12 = readRDS("ETS-rda/mec_2014_12.rda")
+
+mec_2015_01 = readRDS("ETS-rda/mec_2015_01.rda")
+mec_2015_02 = readRDS("ETS-rda/mec_2015_02.rda")
+mec_2015_03 = readRDS("ETS-rda/mec_2015_03.rda")
+mec_2015_04 = readRDS("ETS-rda/mec_2015_04.rda")
+mec_2015_05 = readRDS("ETS-rda/mec_2015_05.rda")
+mec_2015_06 = readRDS("ETS-rda/mec_2015_06.rda")
+mec_2015_07 = readRDS("ETS-rda/mec_2015_07.rda")
+
+mec = rbind(mec_2014_01, mec_2014_02, mec_2014_03, mec_2014_04,
+            mec_2014_05, mec_2014_06, mec_2014_07, mec_2014_08,
+            mec_2014_09, mec_2014_10, mec_2014_11, mec_2014_12,
+            mec_2015_01, mec_2015_02, mec_2015_03, mec_2015_04,
+            mec_2015_05, mec_2015_06, mec_2015_07)
+mec = mec[order(mec$datetime),] 
+
+### save the tables
+saveRDS(all, file="all.rda")
+saveRDS(mec, file="mec.rda")
+
+ipmi = readRDS("IPMI.rda")
+
+dt_ipmi = as.POSIXlt(ipmi$datetime)
+ipmi.z = zoo(x=ipmi$watt/1000*0.9-87.5,order.by=dt_ipmi)
+dt_all = as.POSIXlt(all$datetime)
+all.z = zoo(x=all$kwh,order.by=dt_all)
+dt_mec = as.POSIXlt(mec$datetime)
+mec.z = zoo(x=mec$kwh,order.by=dt_mec)
+
+### Plot the 3 graphs after converting to zoo format
+sub_text = range(index(all.z))
+# plot total graph
+plot(all.z,
+     xlab="Date Range",
+     ylab="kW",
+     #xaxt='n',
+     main="CLUMEQ/ETS Datacenter Power Consumption", 
+     sub=paste(sub_text,collapse="  to  ")
+     )
+all.z.SMA = SMA(all.z,n=2016)
+lines(all.z.SMA,col="red")
+
+# plot mechanical graph
+lines(mec.z)
+mec.z.SMA = SMA(mec.z,n=2016)
+lines(mec.z.SMA,col="blue")
+
+# plot server stats from ipmi
+lines(ipmi.z)
+ipmi.z.SMA = SMA(ipmi.z,n=168)
+lines(ipmi.z.SMA,col="green")
+
+legend("topleft", 
+       fill=c("red", "green", "blue"), 
+       col=c("red", "green", "blue"), 
+       legend=c("Total from ETS", "IPMI adjusted", "Mechanical from ETS"), 
+       cex=0.8, pt.cex=1, bty="n")
+
+dev.copy(png,"comparison.png", width=1920, height=1080)
+dev.off()
+
+```

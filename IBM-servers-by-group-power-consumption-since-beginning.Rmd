@@ -28,6 +28,11 @@ attach(data)
 table(category)
 #by(watt,category,mean)
 tapply(watt, category, mean)
+# Summary by month/week/...
+by(watt,week,summary)
+by(watt,week,sum)
+by(watt,month,summary)
+by(watt,month,sum)
 ```
 
 ```{r fig.width=12,fig.height=12, eval=FALSE}

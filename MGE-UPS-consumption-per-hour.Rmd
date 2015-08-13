@@ -24,6 +24,7 @@ data$week = as.Date(cut(as.Date(data$datetime), breaks="week"))
 data$day = as.Date(cut(as.Date(data$datetime), breaks="day"))
 data$hour = as.POSIXlt(cut(as.POSIXlt(data$datetime,format="%Y-%m-%d %H:%M:%S"), breaks="hour"), tz="EST", format="%Y-%m-%d %H:%M:%S")
 
+saveRDS(data, file="MGE_UPS.rda")
 attach(data)
 table(as.Date(datetime))
 # data2 = last 8 days

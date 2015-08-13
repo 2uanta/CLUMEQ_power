@@ -124,7 +124,7 @@ plot(data.z,
      xlab="Date Range",
      ylab="Watt",
      #xaxt='n',
-     main="ST-1R04 Rack PDU Power Consumption", 
+     main="ST-1R05 Rack PDU Power Consumption", 
      sub=paste(sub_text,collapse="  to  ")
      )
 summary(watt)
