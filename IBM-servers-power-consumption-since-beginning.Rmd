@@ -10,6 +10,7 @@ library(TTR)
 library(lattice)
 library(ggplot2)
 library(scales)
+library(forecast)
 
 data <- read.csv("data/total", header=FALSE)
 
@@ -66,12 +67,12 @@ data3 = data[as.POSIXct(hour) > Sys.time() - 60*60*36,]
 
 ```{r fig.height=6, fig.width=12}
 # Time Series Analysis
-dt = as.POSIXlt(datetime)
-data.z = zoo(x=watt,order.by=dt)
-class(data.z)
-head(index(data.z))
-head(coredata(data.z))
-sub_text = range(index(data.z))
+# dt = as.POSIXlt(datetime)
+# data.z = zoo(x=watt,order.by=dt)
+# class(data.z)
+# head(index(data.z))
+# head(coredata(data.z))
+# sub_text = range(index(data.z))
 
 # Summary by month/week/...
 by(watt,week,summary)
@@ -96,6 +97,7 @@ barplot(tapply(watt,week,sum),
     main="Weekly Power Consumption",
     ylab="Watt"
 )
+
 ```
 
 ``` {r eval=FALSE, echo=FALSE}
@@ -104,9 +106,21 @@ plot(as.POSIXlt(datetime), watt ,
      type='l',
      xlab="DateTime",
      ylab="Watts",
-     #xaxt='n',
+     xaxt='n',
      main="IBM servers power consumption over time", 
      sub=paste(sub_text,collapse="  to  "))
+axis.POSIXct(side=1,at=cut(datetime, breaks="month"),format="%B %y")
+
+# The same plot with ggplot2
+ggplot(data=data, aes(datetime, watt)) +
+  geom_line() +
+  scale_y_continuous(labels = comma) +
+  scale_x_datetime(labels = date_format("%b %Y"), breaks="1 month") +
+  xlab(paste(sub_text,collapse="  to  ")) +
+  ylab("bits") +
+  ggtitle("All IBM Serfers Power Consumption")
+  #labs(title="All IBM Servers Power Consumption")
+
 ```
 
 ```{r fig.width=12}
@@ -120,20 +134,44 @@ sub_text = range(index(data.z))
 plot(data.z,
      xlab="Date Range",
      ylab="Watt",
-     #xaxt='n',
+     xaxt='n',
      main="All IBM Servers Power Consumption", 
      sub=paste(sub_text,collapse="  to  ")
      )
-data.z.SMA = SMA(data.z,n=20)
+axis.POSIXct(side=1,at=cut(datetime, breaks="month"),format="%B %y")
+# n = number of periods to average over (in hours)
+# moving average for last 7 days
+data.z.SMA = SMA(data.z,n=168)
 lines(data.z.SMA,col="red")
+# find NA's
+head(subset(data.z, is.na(data.z)))
 ```
+
+# Forecasting
+
+``` {r}
+acf(data.z, na.action = na.pass)
+pacf(data.z, na.action = na.pass)
+ddata = diff(data.z, difference=1)
+acf(ddata, na.action = na.pass)
+acf(ddata, na.action = na.pass, plot=F)
+pacf(ddata, na.action = na.pass)
+pacf(ddata, na.action = na.pass, plot=F)
+
+auto_arima_data = auto.arima(data.z)
+summary(auto_arima_data)
+forecast = forecast.Arima(auto_arima_data, h=1000)
+plot.forecast(forecast)
+```
+
+
 
 ```{r fig.height=6, fig.width=12,eval=FALSE,echo=FALSE}
 # Plot weekly summary
 ggplot(data=data, aes(week,watt)) +
   stat_summary(fun.y = sum, geom="bar") +
   scale_y_continuous(labels = comma) +
-  scale_x_date(labels = date_format("%Y-%m"), breaks="1 week") +
+  scale_x_date(labels = date_format("%b %Y"), breaks="1 month") +
   labs(title="All IBM Servers Power Consumption")
 
 sub_text = range(as.POSIXlt(datetime))
@@ -141,9 +179,10 @@ plot(as.POSIXlt(datetime), watt ,
      type='l',
      xlab="DateTime",
      ylab="Watts",
-     #xaxt='n',
+     xaxt='n',
      main="IBM servers power consumption over time", 
      sub=paste(sub_text,collapse="  to  "))
+axis.POSIXct(side=1,at=cut(datetime, breaks="month"),format="%B %y")
 ```
 
 ###Study first 36 hours
@@ -155,9 +194,10 @@ plot(as.POSIXlt(dataf36$datetime), dataf36$watt,
      type='l',
      xlab="DateTime",
      ylab="Watts",
-     #xaxt='n',
+     xaxt='n',
      main="IBM servers power consumption for first 36 hours", 
      sub=paste(sub_text,collapse="  to  "))
+axis.POSIXct(side=1,at=cut(datetime, breaks="1 hour"),format="%b-%d %H")
 # summary statistics for first 36 hours
 summary(dataf36$watt)
 ```
@@ -171,9 +211,10 @@ plot(as.POSIXlt(data25$datetime), data25$watt,
      type='l',
      xlab="Hour",
      ylab="Watts",
-     #xaxt='n',
+     xaxt='n',
      main="IBM servers power consumption for October 25, 2015", 
      sub=paste(sub_text,collapse="  to  "))
+axis.POSIXct(side=1,at=cut(datetime, breaks="1 hour"),format="%H")
 # summary statistics for Oct 25
 summary(data25,watt)
 ```
@@ -243,16 +284,22 @@ qplot(datetime,watt,data=data,geom="line", col="red") + facet_wrap(~month, scale
 ```
 ###Decompose time series
 
-``` {r fig.height=12,fig.width=12}
+``` {r fig.height=12,fig.width=12, error=TRUE, eval=F }
 par(mfrow=c(1,1))
 #plot(decompose(ts(coredata(data.z), frequency=24, as.Date("2014-10-23 12:30"))),xlab="Day")
-plot(decompose(ts(coredata(data.z), frequency=24, start=c(23,12))),xlab="Day")
+plot(decompose(ts(coredata(data.z), frequency=24),xlab="Day")
+title(sub=paste(sub_text,collapse="  to  "))
+```
+
+
+``` {r fig.height=12,fig.width=12, error=TRUE }
+plot(decompose(ts(coredata(data.z), frequency=168)),xlab="Week")
 title(sub=paste(sub_text,collapse="  to  "))
 ```
 
 ###Study for last 8 days
 
-```{r fig.height=6,fig.width=12}
+```{r fig.height=6,fig.width=12, eval=T}
 attach(data2)
 dt = as.POSIXlt(datetime)
 data.z = zoo(x=watt,order.by=dt)
@@ -267,13 +314,14 @@ plot(data.z,
      main="All IBM Servers Power Consumption (last 7 days)", 
      sub=paste(sub_text,collapse="  to  ")
      )
-data.z.SMA = SMA(data.z,n=10)
+# moving average for last 24 hours
+data.z.SMA = SMA(data.z,n=24)
 lines(data.z.SMA,col="red")
 ```
 
 ###Study for last 36 hours
 
-```{r fig.height=6,fig.width=12}
+```{r fig.height=6,fig.width=12, eval=T}
 attach(data3)
 dt = as.POSIXlt(datetime)
 data.z = zoo(x=watt,order.by=dt)
@@ -288,6 +336,7 @@ plot(data.z,
      main="All IBM Servers Power Consumption (last 36 hours)", 
      sub=paste(sub_text,collapse="  to  ")
      )
-data.z.SMA = SMA(data.z,n=5)
+# moving average for last 4 hours
+data.z.SMA = SMA(data.z,n=4)
 lines(data.z.SMA,col="red")
 ```

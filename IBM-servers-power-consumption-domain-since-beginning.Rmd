@@ -126,7 +126,9 @@ plot(data.z,
      main="All IBM Servers Power Consumption", 
      sub=paste(sub_text,collapse="  to  ")
      )
-data.z.SMA = SMA(data.z,n=20)
+# n = number of periods to average over (in hours)
+# moving average for last 7 days
+data.z.SMA = SMA(data.z,n=168)
 lines(data.z.SMA,col="red")
 ```
 
@@ -254,7 +256,7 @@ title(sub=paste(sub_text,collapse="  to  "))
 
 ###Study for last 8 days
 
-```{r fig.height=6,fig.width=12}
+```{r fig.height=6,fig.width=12, eval=T}
 attach(data2)
 dt = as.POSIXlt(datetime)
 data.z = zoo(x=watt,order.by=dt)
@@ -269,13 +271,14 @@ plot(data.z,
      main="All IBM Servers Power Consumption (last 7 days)", 
      sub=paste(sub_text,collapse="  to  ")
      )
-data.z.SMA = SMA(data.z,n=10)
+# moving average for last 24 hours
+data.z.SMA = SMA(data.z,n=24)
 lines(data.z.SMA,col="red")
 ```
 
 ###Study for last 36 hours
 
-```{r fig.height=6,fig.width=12}
+```{r fig.height=6,fig.width=12, eval=T}
 attach(data3)
 dt = as.POSIXlt(datetime)
 data.z = zoo(x=watt,order.by=dt)
@@ -290,6 +293,7 @@ plot(data.z,
      main="All IBM Servers Power Consumption (last 36 hours)", 
      sub=paste(sub_text,collapse="  to  ")
      )
-data.z.SMA = SMA(data.z,n=5)
+# moving average for last 4 hours
+data.z.SMA = SMA(data.z,n=4)
 lines(data.z.SMA,col="red")
 ```
