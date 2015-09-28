@@ -1,0 +1,339 @@
+---
+title: "Merge ETS data.Rmd"
+author: "Quan Nguyen"
+date: "Thursday, May 28, 2015"
+output: html_document
+---
+
+### readRDS monthly CSV file from ETS and save as data frame
+
+```{r}
+library(zoo)
+library(TTR)
+library(forecast)
+```
+
+
+```{r fig.width=12, fig.height=12, eval=FALSE}
+all_2014_01 = readRDS("ETS-rda/all_2014_01.rda")
+all_2014_02 = readRDS("ETS-rda/all_2014_02.rda")
+all_2014_03 = readRDS("ETS-rda/all_2014_03.rda")
+all_2014_04 = readRDS("ETS-rda/all_2014_04.rda")
+all_2014_05 = readRDS("ETS-rda/all_2014_05.rda")
+all_2014_06 = readRDS("ETS-rda/all_2014_06.rda")
+all_2014_07 = readRDS("ETS-rda/all_2014_07.rda")
+all_2014_08 = readRDS("ETS-rda/all_2014_08.rda")
+all_2014_09 = readRDS("ETS-rda/all_2014_09.rda")
+all_2014_10 = readRDS("ETS-rda/all_2014_10.rda")
+all_2014_11 = readRDS("ETS-rda/all_2014_11.rda")
+all_2014_12 = readRDS("ETS-rda/all_2014_12.rda")
+
+all_2015_01 = readRDS("ETS-rda/all_2015_01.rda")
+all_2015_02 = readRDS("ETS-rda/all_2015_02.rda")
+all_2015_03 = readRDS("ETS-rda/all_2015_03.rda")
+all_2015_04 = readRDS("ETS-rda/all_2015_04.rda")
+all_2015_05 = readRDS("ETS-rda/all_2015_05.rda")
+all_2015_06 = readRDS("ETS-rda/all_2015_06.rda")
+all_2015_07 = readRDS("ETS-rda/all_2015_07.rda")
+
+all = rbind(all_2014_01, all_2014_02, all_2014_03, all_2014_04,
+            all_2014_05, all_2014_06, all_2014_07, all_2014_08,
+            all_2014_09, all_2014_10, all_2014_11, all_2014_12,
+            all_2015_01, all_2015_02, all_2015_03, all_2015_04,
+            all_2015_05, all_2015_06, all_2015_07)
+
+# fix time :59 import from Excel
+all$datetime = round(all$datetime)
+# sort it again
+all = all[order(all$datetime),]
+# anyDuplicated will give the index-1 of the first duplicated record
+anyDuplicated(all["datetime"])
+# remove duplicates
+all = all[!duplicated(all$datetime),]
+
+###
+
+mec_2014_01 = readRDS("ETS-rda/mec_2014_01.rda")
+mec_2014_02 = readRDS("ETS-rda/mec_2014_02.rda")
+mec_2014_03 = readRDS("ETS-rda/mec_2014_03.rda")
+mec_2014_04 = readRDS("ETS-rda/mec_2014_04.rda")
+mec_2014_05 = readRDS("ETS-rda/mec_2014_05.rda")
+mec_2014_06 = readRDS("ETS-rda/mec_2014_06.rda")
+mec_2014_07 = readRDS("ETS-rda/mec_2014_07.rda")
+mec_2014_08 = readRDS("ETS-rda/mec_2014_08.rda")
+mec_2014_09 = readRDS("ETS-rda/mec_2014_09.rda")
+mec_2014_10 = readRDS("ETS-rda/mec_2014_10.rda")
+mec_2014_11 = readRDS("ETS-rda/mec_2014_11.rda")
+mec_2014_12 = readRDS("ETS-rda/mec_2014_12.rda")
+
+mec_2015_01 = readRDS("ETS-rda/mec_2015_01.rda")
+mec_2015_02 = readRDS("ETS-rda/mec_2015_02.rda")
+mec_2015_03 = readRDS("ETS-rda/mec_2015_03.rda")
+mec_2015_04 = readRDS("ETS-rda/mec_2015_04.rda")
+mec_2015_05 = readRDS("ETS-rda/mec_2015_05.rda")
+mec_2015_06 = readRDS("ETS-rda/mec_2015_06.rda")
+mec_2015_07 = readRDS("ETS-rda/mec_2015_07.rda")
+
+mec = rbind(mec_2014_01, mec_2014_02, mec_2014_03, mec_2014_04,
+            mec_2014_05, mec_2014_06, mec_2014_07, mec_2014_08,
+            mec_2014_09, mec_2014_10, mec_2014_11, mec_2014_12,
+            mec_2015_01, mec_2015_02, mec_2015_03, mec_2015_04,
+            mec_2015_05, mec_2015_06, mec_2015_07)
+
+# fix time :59 import from Excel
+mec$datetime = round(mec$datetime)
+# sort it again
+mec = all[order(mec$datetime),]
+# anyDuplicated will give the index-1 of the first duplicated record
+anyDuplicated(mec["datetime"])
+# remove duplicates
+mec = mec[!duplicated(mec$datetime),]
+
+### save the tables
+saveRDS(all, file="all.rda")
+saveRDS(mec, file="mec.rda")
+```
+
+``` {r, error=TRUE, fig.width=12, fig.height=12 }
+all = readRDS("all.rda")
+mec = readRDS("mec.rda")
+ipmi = readRDS("IPMI.rda")
+
+dt_ipmi = as.POSIXlt(ipmi$datetime)
+ipmi.z = zoo(x=ipmi$watt/1000*0.9-87.5,order.by=dt_ipmi)
+# find NA's
+head(subset(ipmi.z, is.na(ipmi)))
+
+dt_all = as.POSIXlt(all$datetime)
+all.z = zoo(x=all$kwh,order.by=dt_all)
+# find NA's
+head(subset(all.z, is.na(all.z)))
+
+
+dt_mec = as.POSIXlt(mec$datetime)
+mec.z = zoo(x=mec$kwh,order.by=dt_mec)
+# find NA's
+head(subset(mec.z, is.na(mec.z)))
+mec.z = na.locf(mec.z)
+
+sub_text = range(index(all.z))
+
+### Plot the 3 graphs after converting to zoo format
+
+sub_text = range(index(all.z))
+# plot total graph
+plot(all.z,
+     xlab="Date Range",
+     ylab="kW",
+     xaxt='n',
+     main="CLUMEQ/ETS Datacenter Power Consumption", 
+     sub=paste(sub_text,collapse="  to  ")
+     )
+axis.POSIXct(side=1,at=cut(all$datetime, breaks="month"),format="%B %y")
+
+all.z.SMA = SMA(all.z,n=2016) # 2016 = 1 week
+lines(all.z.SMA,col="red")
+
+# plot mechanical graph
+lines(mec.z)
+mec.z.SMA = SMA(mec.z,n=2016) # 2016 = 1 week
+lines(mec.z.SMA,col="blue")
+
+# plot server stats from ipmi
+lines(ipmi.z)
+ipmi.z.SMA = SMA(ipmi.z,n=168) # 168 = 1 week
+lines(ipmi.z.SMA,col="green")
+
+legend("topleft", 
+       fill=c("red", "green", "blue"), 
+       col=c("red", "green", "blue"), 
+       legend=c("Total from ETS", "IPMI adjusted", "Mechanical from ETS"), 
+       cex=0.8, pt.cex=1, bty="n")
+
+dev.copy(png,"comparison.png", width=1920, height=1080)
+dev.off()
+
+# all_and_mec = merge(server_kwh=as.zoo(all$kwh), mec_kwh=as.zoo(mec$kwh))
+# not complete yet. Need to adjust by.x=
+```
+
+### difference
+
+```{r error=TRUE}
+dall = diff(all$kwh, difference=1) 
+plot(dall, type='l')
+dmec = diff(mec$kwh, difference=1)
+dmec = diff(mec.z)
+plot(dmec, type='l')
+dipmi = diff(ipmi$watt, difference=1) 
+plot(dipmi, type='l')
+```
+
+### ACF, DACF (autocovariance or autocorrelation function)
+
+```{r error=TRUE} 
+#acf(mec$kwh, na.action = na.pass)
+acf(mec.z)
+#acf(mec$kwh, na.action = na.pass, plot=F)
+acf(mec.z, plot = F)
+#pacf(mec$kwh, na.action = na.pass)
+pacf(mec.z)
+#pacf(mec$kwh, na.action = na.pass, plot=F)
+pacf(mec.z, plot = F)
+#acf(dmec, na.action = na.pass)
+acf(dmec)
+#acf(dme, na.action = na.passc, plot=F)
+acf(dmec, plot = F)
+#pacf(dmec, na.action = na.pass)
+pacf(dmec)
+#pacf(dmec, plot=F, na.action = na.pass)
+pacf(dmec, plot = F)
+```
+
+### ARIMA
+
+```{r}
+arima_mec = arima(mec$kwh, order=c(1,1,2))
+summary(arima_mec)
+forecast_arima_mec = forecast.Arima(arima_mec, h=100)
+plot(forecast_arima_mec)
+
+
+# auto.arima
+
+auto_arima_mec = auto.arima(mec.z)
+summary(auto_arima_mec)
+forecast = forecast.Arima(auto_arima_mec, h=10000)
+plot.forecast(forecast)
+```
+
+###Decompose time series
+
+``` {r fig.height=12,fig.width=12, error=TRUE}
+#plot(decompose(ts(coredata(data.z), frequency=24, as.Date("2014-10-23 12:30"))),xlab="Day")
+plot(decompose(ts(coredata(all.z), frequency=288, start=c(23,12))),xlab="Day")
+title(sub=paste(sub_text,collapse="  to  "))
+
+plot(decompose(ts(coredata(all.z), frequency=288)),xlab="Day")
+title(sub=paste(sub_text,collapse="  to  "))
+
+plot(decompose(ts(coredata(all.z), frequency=2016)),xlab="Week")
+title(sub=paste(sub_text,collapse="  to  "))
+
+plot(decompose(ts(coredata(all.z), frequency=8640)),xlab="Month")
+title(sub=paste(sub_text,collapse="  to  "))
+```
+
+###Holt Winters' forecast
+
+```{r error=TRUE}
+# Holt's exponential smoothing (in-sample forecast)
+# 'by' argument is much too small
+holt.all.z = HoltWinters(all.z, gamma=FALSE)
+holt.all.z
+holt.mec.z = HoltWinters(mec.z, gamma=FALSE)
+holt.mec.z
+holt.ipmi.z = HoltWinters(ipmi.z, gamma=FALSE)
+#NA/NaN/Inf in foreign function call (arg 1)
+holt.ipmi.z
+```
+
+# We'll make a summary dataset with daily means
+
+``` {r}
+all_daily = aggregate(all$kwh, by=list(day=all$day), mean)
+names(all_daily)[2] = "meankwh"
+dt_all_daily = as.POSIXlt(all_daily$day)
+all_daily.z = zoo(x=all_daily$meankwh,order.by=dt_all_daily)
+
+mec_daily = aggregate(mec$kwh, by=list(day=mec$day), mean)
+names(mec_daily)[2] = "meankwh"
+dt_mec_daily = as.POSIXlt(mec_daily$day)
+mec_daily.z = zoo(x=mec_daily$meankwh,order.by=dt_mec_daily)
+
+ipmi_daily = aggregate(ipmi$watt, by=list(day=ipmi$day), mean)
+names(ipmi_daily)[2] = "meanwh"
+dt_ipmi_daily = as.POSIXlt(ipmi_daily$day)
+ipmi_daily.z = zoo(x=ipmi_daily$meankwh,order.by=dt_ipmi_daily)
+```
+
+### difference
+
+```{r error=TRUE}
+dmec_daily = diff(mec_daily$meankwh, difference=1) # 1 days
+plot(dmec_daily, type='l')
+```
+
+
+### ACF, PACF (autocovariance or autocorrelation function)
+
+```{r error=TRUE} 
+acf(mec_daily$meankwh)
+acf(mec_daily$meankwh, plot=F)
+pacf(mec_daily$meankwh)
+pacf(mec_daily$meankwh, plot=F)
+acf(dmec_daily)
+acf(dmec_daily, plot=F)
+pacf(dmec_daily)
+pacf(dmec_daily, plot=F)
+```
+
+### ARIMA
+
+```{r}
+arima_mec_daily = arima(mec_daily$meankwh, order=c(1,1,2))
+summary(arima_mec_daily)
+forecast_arima_mec_daily = forecast.Arima(arima_mec_daily, h=100)
+plot(forecast_arima_mec_daily)
+
+# auto.arima
+
+auto_arima_mec_daily = auto.arima(mec_daily.z)
+summary(auto_arima_mec_daily)
+forecast = forecast.Arima(auto_arima_mec_daily, h=100)
+plot.forecast(forecast)
+``` 
+
+
+
+``` {r eval=F}
+### Plot the 3 graphs after converting to zoo format
+sub_text = range(index(all_daily.z))
+# plot total graph
+plot(all_daily.z,
+     xlab="Date Range",
+     ylab="meankWh",
+     #xaxt='n',
+     main="CLUMEQ/ETS Datacenter Power Consumption", 
+     sub=paste(sub_text,collapse="  to  ")
+     )
+all_daily.z.SMA = SMA(all_daily.z,n=7) # 7 = 1 week
+lines(all_daily.z.SMA,col="red")
+
+# Holt's exponential smoothing (in-sample forecast)
+holt.all_daily.z = HoltWinters(all_daily.z, gamma=FALSE)
+# ABNORMAL_TERMINATION_IN_LNSRCH
+holt.all_daily.z
+holt.mec_daily.z = HoltWinters(mec_daily.z, gamma=FALSE)
+holt.mec_daily.z
+holt.ipmi_daily.z = HoltWinters(ipmi_daily.z, gamma=FALSE)
+#NA/NaN/Inf in foreign function call (arg 1)
+holt.ipmi_daily.z
+
+# Holt's future forceast
+holt_future.mec_daily.z = forecast.HoltWinters(holt.mec_daily.z, h=50)
+plot(holt_future.mec_daily.z) # works
+
+```
+
+###STL forecast
+
+```{r error=TRUE, eval=F}
+# will hang here
+# stl.mec.z = stlf(mec.z, etsmodel="AAN", damped=F)
+# stl.mec.z
+# stl.future_mec_daily.z = stlf(mec_daily.z, etsmodel="AAN", damped=F)
+# stl.future_mec_daily.z
+# plot(stl_future.mec_daily.z) # works
+```
+
