@@ -108,7 +108,7 @@ boxplot(watt, horizontal=T,
 # Time Series Analysis
 
 dt = as.POSIXlt(datetime)
-data.z = zoo(x=watt,order.by=dt, frequency = 24)
+data.z = zoo(x=watt,order.by=dt, frequency = 720)
 class(data.z)
 head(index(data.z))
 head(coredata(data.z))
@@ -120,7 +120,7 @@ plot(data.z,
      main="MGE UPS power consumption", 
      sub=paste(sub_text,collapse="  to  ")
      )
-data.z.SMA = SMA(data.z,n=24) # n: number of intervals
+data.z.SMA = SMA(data.z,n=720) # n: number of intervals
 lines(data.z.SMA,col="blue")
 
 hist(coredata(data.z),breaks=20,
@@ -200,11 +200,12 @@ par(mfrow=c(1,3))
 qplot(datetime,watt,data=data,geom="line", col="red") + facet_wrap(~month, scales='free_x', ncol=1)
 
 ```
+
 ###Decompose time series
 
 ``` {r fig.height=12,fig.width=12}
 #plot(decompose(ts(coredata(data.z), frequency=24, as.Date("2014-10-23 12:30"))),xlab="Day")
-plot(decompose(ts(coredata(data.z), frequency=24, start=c(23,12))),xlab="Day") # frequency -> 24 intervals
+plot(decompose(ts(coredata(data.z), frequency=720, start=c(23,12))),xlab="Day") # frequency -> 24 intervals
 title(sub=paste(sub_text,collapse="  to  "))
 ```
 
